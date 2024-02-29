@@ -55,6 +55,21 @@ REFERENCES libros (id_libro)
 ALTER TABLE clientes
 ADD CONSTRAINT uq_email_cliente UNIQUE (email_cliente);
 
+/*Trigger*/
+DELIMITER //
+
+CREATE TRIGGER actualizar_estado_libro
+AFTER INSERT ON detalles_prestamos
+FOR EACH ROW
+BEGIN
+
+    UPDATE libros
+    SET estado = 'Prestado'
+    WHERE id_libro = NEW.id_libro;
+END //
+
+DELIMITER ;
+
 /*Procedimientos*/
 
 DELIMITER //
@@ -144,19 +159,14 @@ BEGIN
     DECLARE Libros_id2 BINARY(36);
     DECLARE DetallePrestamo_id VARCHAR(50);
 
-    -- Obtener el ID del cliente
     SET Cliente_id2 = (SELECT id_cliente FROM clientes WHERE nombre_cliente = nombre_cliente LIMIT 1);
 
-    -- Obtener el ID del préstamo
     SET Prestamo_id2 = (SELECT id_prestamo FROM prestamos WHERE id_cliente = Cliente_id2 LIMIT 1);
 
-    -- Obtener el ID del libro
     SET Libros_id2 = (SELECT id_libro FROM libros WHERE titulo_libro = tituloLibro LIMIT 1);
 
-    -- Generar un ID único para el detalle del préstamo
     SET DetallePrestamo_id = UUID();
 
-    -- Insertar el detalle del préstamo en la tabla tb_detalles_prestamos
     INSERT INTO detalles_prestamos(id_detalle_prestamo, id_prestamo, id_libro) 
     VALUES (DetallePrestamo_id, Prestamo_id2, Libros_id2);
 END //
